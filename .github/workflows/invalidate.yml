@@ -3,7 +3,7 @@ name: Cache Revalidation
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   revalidate_cache:
