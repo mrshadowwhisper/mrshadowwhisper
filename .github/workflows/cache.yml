@@ -3,7 +3,7 @@ name: Cache Revalidation
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   revalidate_cache:
@@ -16,9 +16,25 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get -y install curl grep
+          sudo apt-get -y install curl grep sed
+
+      - name: Extract Image URL
+        run: |
+          curl -s https://raw.githubusercontent.com/mrshadowwhisper/mrshadowwhisper/main/README.md > readme.md
+          IMAGE_URL=$(grep -Eo '\[!\[.*\]\((http[^)]+)\)' readme.md | sed -E 's/.*\((http[^)]+)\).*/\1/')
+
+      - name: Update Image URL with Query Parameter
+        run: |
+          NEW_IMAGE_URL="${IMAGE_URL}&r=$(date +%s)"
+          sed -i "s|${IMAGE_URL}|${NEW_IMAGE_URL}|" readme.md
 
       - name: Revalidate Cache
         run: |
-          curl -s https://raw.githubusercontent.com/mrshadowwhisper/mrshadowwhisper/main/README.md > readme.md
           grep -Eo '<img src="[^"]+"' readme.md | grep -Eo 'https?://[^"]+' | xargs -I {} curl -w "\n" -s -X PURGE {}
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git commit -am "Update image URL with random query parameter [skip ci]"
+          git push
