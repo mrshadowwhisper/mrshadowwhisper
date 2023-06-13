@@ -31,6 +31,10 @@ jobs:
       - name: Revalidate Cache
         run: |
           grep -Eo '<img src="[^"]+"' readme.md | grep -Eo 'https?://[^"]+' | xargs -I {} curl -w "\n" -s -X PURGE {}
+        
+      - name: Echo Secret Value
+        run: |
+          echo ${{ secrets.GH_PAT }}
 
       - name: Commit and Push Changes
         env:
