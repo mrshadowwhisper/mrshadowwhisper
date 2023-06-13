@@ -20,23 +20,24 @@ jobs:
 
       - name: Extract Image URL
         run: |
-          curl -s https://raw.githubusercontent.com/mrshadowwhisper/mrshadowwhisper/main/README.md > readme.md
-          IMAGE_URL=$(grep -Eo '\[!\[.*\]\((http[^)]+)\)' readme.md | perl -pe 's/.*\((http[^)]+)\).*/\1/')
+          curl -s https://raw.githubusercontent.com/mrshadowwhisper/mrshadowwhisper/main/README.md > README.md
+          IMAGE_URL=$(grep -Eo '\[!\[.*\]\((http[^)]+)\)' README.md | perl -pe 's/.*\((http[^)]+)\).*/\1/')
+          echo "IMAGE_URL=${IMAGE_URL}" >> $GITHUB_ENV
 
       - name: Update Image URL with Query Parameter
         run: |
           NEW_IMAGE_URL="${IMAGE_URL}&r=$(date +%s)"
-          perl -i -pe "s|\Q${IMAGE_URL}\E|\Q${NEW_IMAGE_URL}\E|" readme.md
+          echo "NEW_IMAGE_URL=${NEW_IMAGE_URL}" >> $GITHUB_ENV
+          perl -i -pe "s|\Q${IMAGE_URL}\E|\Q${NEW_IMAGE_URL}\E|" README.md
 
       - name: Revalidate Cache
         run: |
-          grep -Eo '<img src="[^"]+"' readme.md | grep -Eo 'https?://[^"]+' | xargs -I {} curl -w "\n" -s -X PURGE {}
-        
+          grep -Eo '<img src="[^"]+"' README.md | grep -Eo 'https?://[^"]+' | xargs -I {} curl -w "\n" -s -X PURGE {}
+
       - name: Commit and Push Changes
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "arikchangma@gmail.com"
-          git add readme.md
+          git add README.md
           git commit -m "Update image URL with random query parameter [skip ci]"
           git push origin master
-
