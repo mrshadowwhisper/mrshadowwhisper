@@ -16,16 +16,16 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get -y install curl grep sed
+          sudo apt-get -y install curl grep awk
 
       - name: Extract Image URL
         run: |
           curl -s https://raw.githubusercontent.com/mrshadowwhisper/mrshadowwhisper/main/README.md > readme.md
-          IMAGE_URL=$(grep -Eo '\[!\[.*\]\((http[^)]+)\)' readme.md | sed -E 's/.*\((http[^)]+)\).*/\1/')
+          IMAGE_URL=$(grep -Eo '\[!\[.*\]\((http[^)]+)\)' readme.md | awk -F'[()]' '{print $2}')
 
       - name: Update Image URL with Query Parameter
         run: |
-          NEW_IMAGE_URL="${IMAGE_URL}&r=$(date +%s)"
+          NEW_IMAGE_URL="${IMAGE_URL}?r=$(date +%s)"
           sed -i "s|${IMAGE_URL}|${NEW_IMAGE_URL}|" readme.md
 
       - name: Revalidate Cache
