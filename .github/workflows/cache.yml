@@ -16,28 +16,29 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get -y install curl grep perl
+          sudo apt-get -y install curl perl
 
       - name: Extract Image URL
         run: |
-          curl -s https://raw.githubusercontent.com/mrshadowwhisper/mrshadowwhisper/main/README.md > readme.md
-          IMAGE_URL=$(grep -Eo '\[!\[.*\]\((http[^)]+)\)' readme.md | perl -pe 's/.*\((http[^)]+)\).*/\1/')
+          curl -s https://raw.githubusercontent.com/mrshadowwhisper/mrshadowwhisper/main/README.md > README.md
+          IMAGE_URL=$(perl -ne 'print "$1\n" if /!\[.*\]\((http[^)]+)\)/' README.md)
           echo "IMAGE_URL=${IMAGE_URL}" >> $GITHUB_ENV
 
       - name: Update Image URL with Query Parameter
         run: |
           NEW_IMAGE_URL="${IMAGE_URL}&r=$(date +%s)"
           echo "NEW_IMAGE_URL=${NEW_IMAGE_URL}" >> $GITHUB_ENV
-          perl -i -pe "s|\Q${IMAGE_URL}\E|\Q${NEW_IMAGE_URL}\E|" readme.md
+          sed -i "s|$(echo "${IMAGE_URL}" | sed 's/[\/&]/\\&/g')|${NEW_IMAGE_URL}|" README.md
 
       - name: Revalidate Cache
         run: |
-          grep -Eo '<img src="[^"]+"' readme.md | grep -Eo 'https?://[^"]+' | xargs -I {} curl -w "\n" -s -X PURGE {}
+          IMAGE_PATH=$(echo "${NEW_IMAGE_URL}" | perl -pe 's/^.*\/(\w+)(\?.*)?$/\1/')
+          curl -X PURGE "https://api.roadmap.sh/v1-badge/long/${IMAGE_PATH}"
 
       - name: Commit and Push Changes
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "arikchangma@gmail.com"
-          git add readme.md
+          git add README.md
           git commit -m "Update image URL with random query parameter [skip ci]"
           git push origin master
