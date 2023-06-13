@@ -3,7 +3,7 @@ name: Cache Revalidation
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   revalidate_cache:
@@ -16,23 +16,27 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get -y install curl perl
-
-      - name: Extract Image URL
-        run: |
-          curl -s https://raw.githubusercontent.com/mrshadowwhisper/mrshadowwhisper/main/README.md > README.md
-          IMAGE_URL=$(perl -ne 'print "$1\n" if /!\[.*\]\((http[^)]+)\)/' README.md)
-          echo "IMAGE_URL=${IMAGE_URL}" >> $GITHUB_ENV
+          sudo apt-get -y install python3
 
       - name: Update Image URL with Query Parameter
         run: |
-          NEW_IMAGE_URL="${IMAGE_URL}&r=$(date +%s)"
-          echo "NEW_IMAGE_URL=${NEW_IMAGE_URL}" >> $GITHUB_ENV
-          sed -i "s|$(echo "${IMAGE_URL}" | sed 's/[\/&]/\\&/g')|$(echo "${NEW_IMAGE_URL}" | sed 's/[\/&]/\\&/g')|" README.md
+          python3 -c '
+          import re
+
+          with open("README.md", "r") as file:
+              content = file.read()
+
+          pattern = r"(?<=!\[.*\]\()(http[^)]+)(?=\))"
+          updated_content = re.sub(pattern, lambda match: match.group() + "&r=$(date +%s)", content)
+
+          with open("README.md", "w") as file:
+              file.write(updated_content)
+          '
 
       - name: Revalidate Cache
         run: |
-          IMAGE_PATH=$(echo "${NEW_IMAGE_URL}" | perl -pe 's/^.*\/(\w+)(\?.*)?$/\1/')
+          IMAGE_URL=$(grep -Eo '\[!\[.*\]\((http[^)]+)\)' README.md | perl -pe 's/.*\((http[^)]+)\).*/\1/')
+          IMAGE_PATH=$(echo "${IMAGE_URL}" | perl -pe 's/^.*\/(\w+)(\?.*)?$/\1/')
           curl -X PURGE "https://api.roadmap.sh/v1-badge/long/${IMAGE_PATH}"
 
       - name: Commit and Push Changes
@@ -41,4 +45,4 @@ jobs:
           git config user.email "arikchangma@gmail.com"
           git add README.md
           git commit -m "Update image URL with random query parameter [skip ci]"
-          git push origin main
+          git push origin master
