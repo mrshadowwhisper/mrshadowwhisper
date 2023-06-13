@@ -16,17 +16,17 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get -y install curl grep python3
+          sudo apt-get -y install curl grep perl
 
       - name: Extract Image URL
         run: |
           curl -s https://raw.githubusercontent.com/mrshadowwhisper/mrshadowwhisper/main/README.md > readme.md
-          IMAGE_URL=$(python3 -c "import re; f = open('readme.md', 'r'); contents = f.read(); f.close(); match = re.search(r'\[!\[.*\]\((http[^)]+)\)', contents); print(match.group(1) if match else '')")
+          IMAGE_URL=$(grep -Eo '\[!\[.*\]\((http[^)]+)\)' readme.md | perl -pe 's/.*\((http[^)]+)\).*/\1/')
 
       - name: Update Image URL with Query Parameter
         run: |
-          NEW_IMAGE_URL="${IMAGE_URL}&r=$(date +%s)"
-          sed -i "s|${IMAGE_URL}|${NEW_IMAGE_URL}|" readme.md
+          NEW_IMAGE_URL="${IMAGE_URL}?r=$(date +%s)"
+          perl -i -pe "s|\Q${IMAGE_URL}\E|\Q${NEW_IMAGE_URL}\E|" readme.md
 
       - name: Revalidate Cache
         run: |
