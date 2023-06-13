@@ -32,17 +32,11 @@ jobs:
         run: |
           grep -Eo '<img src="[^"]+"' readme.md | grep -Eo 'https?://[^"]+' | xargs -I {} curl -w "\n" -s -X PURGE {}
         
-      - name: Echo Secret Value
-        run: |
-          echo ${{ secrets.GH_PAT }}
-
       - name: Commit and Push Changes
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add readme.md
           git commit -m "Update image URL with random query parameter [skip ci]"
-          git push https://${{ env.GH_PAT }}@github.com/mrshadowwhisper/mrshadowwhisper.git
+          git push origin master
 
