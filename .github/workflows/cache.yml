@@ -21,7 +21,7 @@ jobs:
       - name: Extract Image URL
         run: |
           curl -s https://raw.githubusercontent.com/mrshadowwhisper/mrshadowwhisper/main/README.md > readme.md
-          IMAGE_URL=$(grep -Eo '\[!\[.*\]\((http[^)]+)\)' README.md | perl -pe 's/.*\((http[^)]+)\).*/\1/')
+          IMAGE_URL=$(grep -Eo '\[!\[.*\]\((http[^)]+)\)' readme.md | perl -pe 's/.*\((http[^)]+)\).*/\1/')
           echo "IMAGE_URL=${IMAGE_URL}" >> $GITHUB_ENV
 
       - name: Update Image URL with Query Parameter
