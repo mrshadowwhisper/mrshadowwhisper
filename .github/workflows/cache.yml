@@ -36,5 +36,7 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git commit -am "Update image URL with random query parameter [skip ci]"
+          git add readme.md
+          git commit -m "Update image URL with random query parameter [skip ci]"
           git push
+
