@@ -3,7 +3,7 @@ name: Cache Revalidation
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   revalidate_cache:
@@ -28,7 +28,7 @@ jobs:
         run: |
           NEW_IMAGE_URL="${IMAGE_URL}&r=$(date +%s)"
           echo "NEW_IMAGE_URL=${NEW_IMAGE_URL}" >> $GITHUB_ENV
-          sed -i "s|$(echo "${IMAGE_URL}" | sed 's/[\/&]/\\&/g')|${NEW_IMAGE_URL}|" README.md
+          sed -i "s|$(echo "${IMAGE_URL}" | sed 's/[\/&]/\\&/g')|$(echo "${NEW_IMAGE_URL}" | sed 's/[\/&]/\\&/g')|" README.md
 
       - name: Revalidate Cache
         run: |
@@ -41,4 +41,4 @@ jobs:
           git config user.email "arikchangma@gmail.com"
           git add README.md
           git commit -m "Update image URL with random query parameter [skip ci]"
-          git push origin master
+          git push origin main
