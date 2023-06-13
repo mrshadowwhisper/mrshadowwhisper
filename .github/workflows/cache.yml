@@ -1,0 +1,24 @@
+name: Cache Revalidation
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  revalidate_cache:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install curl grep
+
+      - name: Revalidate Cache
+        run: |
+          curl -s https://raw.githubusercontent.com/mrshadowwhisper/mrshadowwhisper/main/README.md > readme.md
+          grep -Eo '<img src="[^"]+"' readme.md | grep -Eo 'https?://[^"]+' | xargs -I {} curl -w "\n" -s -X PURGE {}
